@@ -1,0 +1,24 @@
+1. Dlaczego trzymamy saldo w **groszach** (`long`), a nie w PLN (`double`)?
+Typ double może powodować błędy zaokrągleń i dlatego saldo trzymamy w groszach jako long,
+ponieważ pieniądze muszą być liczone dokładnie.
+
+
+2. Dlaczego blokujemy konta w `transfer` w **porządku rosnącego `id`**, a nie w kolejności `from`, `to`?
+Blokujemy to zawsze w tej samej kolejności, aby dwa wątki nie zablokowały kont odwrotnie i nie czekały na siebie nawzajem.
+
+
+3. Dlaczego `synchronized` na `BankAccount.deposit/withdraw` **nie wystarcza** do bezpiecznego przelewu
+(musimy zablokować całe `transfer`)?
+Same metody deposit i withdraw są bezpieczne osobno, ale cały przelew musi być spójną operacją.
+Trzeba zablokować oba konta, żeby między wypłatą a wpłatą nie wszedł inny wątek.
+
+
+4. Co stałoby się, gdybyśmy użyli `AtomicLong` jako saldo i prosto `getAndAdd(-amount)` w wypłacie?
+(Podpowiedź: brak walidacji „czy stać”.)
+getAndAdd(-amount) odjęłoby pieniądze atomowo, przez co konto mogłoby zejść na minus.
+
+
+5. W wersji z `ReentrantLock.tryLock(timeout)` – co dzieje się, gdy nie udało się uzyskać locka?
+Jak system się zachowuje? Czy to jest deadlock?
+Jeżeli nie uda się zdobyć locka, wątek próbuje przez określony czas. Jeśli nadal się nie uda, rezygnuje z przelewu i
+zwraca false. To nie jest deadlock, ponieważ wątek nie czeka w nieskończoność, po nieudanych próbach zwraca false.
